@@ -1,35 +1,58 @@
-🛡️ AI-Assisted AML Alert Triage System
+# AI-Assisted AML Alert Triage System
 
-NOTE: Hybrid deterministic + LLM decision engine (WIP – extensible architecture)
+Deterministic + LLM-assisted decision engine for AML alert classification
+Built with Node.js, TypeScript, Express, and a modular layered architecture.
 
-A regulatory-aware AML alert classification system combining explicit risk scoring with AI behavioral validation.
+## 1. Problem Context
 
-🚀 System Overview
+Financial institutions receive a high volume of AML (Anti-Money Laundering) alerts triggered by rule engines detecting:
 
-Hybrid decision architecture for AML alert triage:
+Velocity anomalies
 
-Deterministic risk scoring engine
+Threshold breaches
 
-LLM behavioral validation layer
+Unusual transaction behavior
 
-Governance-based final decision engine
+The real operational challenge is not summarization — it is decision-making:
 
-Audit-ready structured logging
+Which alerts can be safely AUTO_CLOSE?
 
-Designed for explainability, safety, and operational efficiency.
+Which require ANALYST_REVIEW?
 
-🏗️ Architecture
-🔷 Layered Architecture
+Which must be ESCALATE?
+
+Manual triage introduces:
+
+Bottlenecks
+
+Inconsistency
+
+Regulatory risk
+
+### Solution Approach
+
+This system introduces a hybrid decision model:
+
+Deterministic risk scoring
+
+LLM-based behavioral validation
+
+Governance-based final decision logic
+
+The goal: faster, consistent, explainable triage decisions.
+
+## 🏗️ 2. Architecture Overview
+### 🔷 Layered Architecture
 API Layer
     ↓
 Application Layer (Orchestration)
     ↓
-Domain Layer (Risk + Governance Logic)
+Domain Layer (Risk + Decision Logic)
     ↓
 Infrastructure Layer (LLM + Config)
     ↓
-Shared (Logger / Utilities)
-📂 Project Structure
+Shared (Logging / Utilities)
+### 📂 Project Structure
 src/
  ├── modules/
  │   ├── aml/
@@ -51,7 +74,7 @@ src/
  │   └── swagger.yaml
  ├── app.ts
  └── server.ts
-🧠 Decision Flow
+## 🧠 3. Decision Flow
 Input Data
     ↓
 Deterministic Risk Engine
@@ -61,13 +84,13 @@ LLM Behavioral Validation
 Governance Decision Engine
     ↓
 Final Triage Result
-⚙️ Deterministic Risk Engine
+## ⚙️ 4. Deterministic Risk Logic
 
 Risk Score Range: 0 – 100
-Score is clamped between 0 and 100.
 
-🔢 Signal Weights
-Signal	Weight
+Each signal contributes explicit weighted score.
+
+#### Signal	Weight
 Velocity Pattern	+25
 Threshold Avoidance	+20
 High Risk Customer	+20
@@ -78,70 +101,70 @@ Stable Account	-15
 Large Cash Activity	+10
 Multi-Channel Movement	+8
 Multiple Rule Trigger	+10
-✔ Engine Characteristics
+✔ Key Characteristics
 
 Explicit numeric scoring
 
 Modular pluggable signals
 
-Configurable weight configuration
+Configurable weights
 
-Traceable signal-level reasoning
+Traceable reasoning
 
-Deterministic and testable
+Score clamped between 0–100
 
-Each signal emits:
+Each signal logs structured trace:
 
 {
-  "signal": "VelocitySignal",
+  "signal": "Velocity Pattern",
   "weight": 25,
-  "why": "Multiple transactions within short window"
+  "why": "Multiple transactions in short window"
 }
-🤖 LLM Behavioral Validation Layer
+🤖 5. LLM Reasoning Layer
 
-The LLM does not summarize alerts.
+The LLM is used for behavioral reasoning, NOT summarization.
 
 It performs:
 
-Behavioral pattern detection (structuring, layering, velocity abuse)
+Pattern detection (structuring, velocity abuse, layering)
 
-Risk validation against deterministic score
+Risk validation or challenge
+
+Missing signal identification
 
 Disagreement detection
 
-Missing pattern surfacing
-
 Confidence scoring
 
-🔐 Resilience Controls
+### 🔐 Resilience Features
 
-3 second timeout protection
+3-second timeout
 
 Single retry attempt
 
-Automatic heuristic fallback
+Automatic fallback to heuristic reasoning
 
-Never blocks deterministic execution
+Deterministic flow never blocked
 
-System degrades safely.
+## 🏛️ 6. Governance Decision Logic
+### 🚨 Hard Rule (Regulatory Requirement)
 
-🏛️ Governance Decision Engine
+AUTO_CLOSE is allowed only if:
 
-Hard regulatory rule:
+Risk score is below threshold
 
-AUTO_CLOSE allowed only if risk < threshold AND LLM agrees.
+LLM agrees with the assessment
 
-📊 Decision Matrix
+### 📊 Decision Matrix
 Condition	Decision
 risk ≥ 80	ESCALATE
 45 ≤ risk < 80	ANALYST_REVIEW
 risk < 45 AND LLM agrees	AUTO_CLOSE
 risk < 45 AND LLM disagrees	ANALYST_REVIEW
 
-Prevents unsafe auto-closure.
+This ensures no alert is auto-closed when behavioral risk is detected.
 
-📡 API
-Endpoint
+## 📡 7. API
 POST /api/triage
 Example Request
 {
@@ -169,16 +192,16 @@ Example Response
   "explanation": "Behavioral patterns align with deterministic risk.",
   "confidence": 0.82
 }
-📊 Audit Logging
+## 📊 8. Audit Logging
 
-Every decision logs structured JSON:
+Every triage decision logs structured JSON:
 
 {
   "type": "AML_TRIAGE_AUDIT",
   "timestamp": "...",
   "decision": "ANALYST_REVIEW",
   "risk_score": 72,
-  "reason_codes": ["VELOCITY_PATTERN"],
+  "reason_codes": [],
   "trace": [],
   "llm_patterns": []
 }
@@ -189,75 +212,86 @@ Regulatory audit
 
 SIEM ingestion
 
-Future DB persistence
+Future persistence to database
 
-🧪 Testing
+## 🧪 9. Testing
 
 Unit tests cover:
 
 Deterministic risk scoring
 
-Governance rule enforcement
-
-Decision threshold logic
+Hard governance rule enforcement
 
 Run:
 
 npm test
-🛠️ Tech Stack
-
-Node.js
-
-TypeScript
-
-Express.js
-
-Jest
-
-Modular Layered Architecture
-
-🚦 Getting Started
+## 🚀 10. Getting Started
 Install Dependencies
 npm install
-Run Server
+Run Development Server
 npm run dev
-Run Tests
-npm test
-🔐 Scaling & Production Considerations
-Current Capabilities
+
+## 🔐 11. Scaling & Production Considerations
+### Current Capabilities
 
 Stateless architecture
 
 Configurable risk weights
 
-LLM timeout + retry
-
-Modular signal plug-in system
+Timeout + retry for LLM
 
 Rate limiting middleware
 
-Future Enhancements
+Modular signal extensibility
+
+### Future Enhancements
 
 Persistent audit storage (DB / Kafka)
 
 Circuit breaker for LLM
 
+Horizontal scaling
+
 Async queue-based LLM validation
 
-Horizontal scaling via load balancer
+Risk model versioning
 
-Risk versioning
+Observability metrics
 
-Model explainability metrics
+## 📝 12. Notes for Evaluator
 
-📝 Evaluator Notes
+Deterministic logic is explicit and auditable
 
-Deterministic logic is fully explicit and traceable.
+LLM participates in behavioral validation (not summarization)
 
-LLM assists in decisioning — not summarization.
+AUTO_CLOSE hard rule is strictly enforced
 
-AUTO_CLOSE hard rule strictly enforced.
+System degrades safely when LLM fails
 
-Safe degradation when LLM fails.
+Architecture supports extensibility and scalability
 
-Architecture supports pluggable signal extension.
+Governance logic is isolated and unit tested
+
+## 📦 13. Tech Stack
+
+Node.js
+
+TypeScript
+
+Express
+
+Jest
+
+Swagger (OpenAPI 3.0)
+
+## 🏁 Conclusion
+
+This solution demonstrates a hybrid AML triage system where:
+
+Deterministic rules ensure regulatory clarity
+
+LLM enhances behavioral intelligence
+
+Governance safeguards enforce compliance
+
+Designed to reduce AML triage bottlenecks while maintaining explainability and auditability.
