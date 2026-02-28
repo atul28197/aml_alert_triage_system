@@ -1,4 +1,4 @@
-import { RiskSignal } from './base.signal';
+import { RiskSignal } from './baseSignal';
 import { AMLInput } from '../domain/types';
 import { RISK_WEIGHTS } from '../../../config/risk.config';
 import { REASON_CODES } from '../domain/reasonCodes';

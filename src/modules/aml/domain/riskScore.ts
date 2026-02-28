@@ -1,5 +1,5 @@
 import { AMLInput } from './types';
-import { RiskSignal } from '../signals/base.signal';
+import { RiskSignal } from '../signals/baseSignal';
 
 import { VelocitySignal } from '../signals/velocity.signal';
 import { ThresholdAvoidanceSignal } from '../signals/threshold.signal';
