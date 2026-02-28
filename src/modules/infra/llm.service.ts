@@ -16,8 +16,12 @@ interface LLMResponse {
 }
 
 /**
- * Heuristic reasoning fallback (offline-friendly)
- * Must reason over BEHAVIOR — not summarize.
+ * Heuristic fallback reasoning
+ * Used when:
+ * - No API key
+ * - LLM timeout
+ * - LLM error
+ * - Invalid LLM response
  */
 function heuristicReasoning(
   input: AMLInput,
@@ -71,7 +75,26 @@ function heuristicReasoning(
 }
 
 /**
- * OpenAI reasoning (optional — only if API key present)
+ * Timeout wrapper for fetch
+ */
+async function fetchWithTimeout(
+  url: string,
+  options: any,
+  timeout = 3000
+) {
+  return Promise.race([
+    fetch(url, options),
+    new Promise<Response>((_, reject) =>
+      setTimeout(() => reject(new Error('LLM Timeout')), timeout)
+    )
+  ]);
+}
+
+/**
+ * OpenAI reasoning with:
+ * - Timeout
+ * - Retry (1 retry)
+ * - Safe fallback
  */
 async function openAIReasoning(
   input: AMLInput,
@@ -83,50 +106,64 @@ async function openAIReasoning(
     return heuristicReasoning(input, deterministic);
   }
 
-  try {
-    const response = await fetch(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`
+  const url = 'https://api.openai.com/v1/chat/completions';
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetchWithTimeout(
+        url,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are an AML reviewer. Validate deterministic risk score. Return JSON only.'
+              },
+              {
+                role: 'user',
+                content: JSON.stringify({ input, deterministic })
+              }
+            ],
+            temperature: 0.2
+          })
         },
-        body: JSON.stringify({
-          model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are an AML reviewer. Validate deterministic risk score. Return JSON only.'
-            },
-            {
-              role: 'user',
-              content: JSON.stringify({ input, deterministic })
-            }
-          ],
-          temperature: 0.2
-        })
+        3000 // 3 second timeout
+      );
+
+      if (!response.ok) {
+        throw new Error('LLM request failed');
       }
-    );
 
-    if (!response.ok) {
-      return heuristicReasoning(input, deterministic);
+      const data = await response.json();
+      const content = data?.choices?.[0]?.message?.content;
+
+      if (!content) {
+        throw new Error('Invalid LLM response');
+      }
+
+      return JSON.parse(content);
+    } catch (err) {
+      // If last attempt → fallback
+      if (attempt === 1) {
+        return heuristicReasoning(input, deterministic);
+      }
     }
-
-    const data = await response.json();
-    const content = data?.choices?.[0]?.message?.content;
-
-    if (!content) {
-      return heuristicReasoning(input, deterministic);
-    }
-
-    return JSON.parse(content);
-  } catch {
-    return heuristicReasoning(input, deterministic);
   }
+
+  // Safety fallback
+  return heuristicReasoning(input, deterministic);
 }
 
+/**
+ * Public function used by application layer
+ */
 export async function runLLMReasoning(
   input: AMLInput,
   deterministic: DeterministicResult
