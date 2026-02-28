@@ -3,6 +3,8 @@ import { RiskEngine } from '../aml/domain/riskScore';
 import { DecisionEngine } from '../aml/domain/decision';
 import { runLLMReasoning } from '../infra/llm.service';
 
+import { logAudit } from "../../shared/logger";
+
 function clamp(score: number) {
   return Math.max(0, Math.min(100, score));
 }
@@ -29,6 +31,16 @@ export class TriageService {
       llmDisagreement: Boolean(llm.llmDisagreement)
     });
 
+    // For logging and audit purposes, we log the entire decision context
+    logAudit({
+        timestamp: new Date().toISOString(),
+        decision,
+        risk_score: combinedRisk,
+        reason_codes: deterministic.reasonCodes,
+        llm_disagreement: Boolean(llm.llmDisagreement),
+        trace: deterministic.trace,
+        llm_patterns: llm.patterns
+      });
     // 5️⃣ Final Output (STRICTLY as assignment requires)
     return {
       decision,
