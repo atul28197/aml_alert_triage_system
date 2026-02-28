@@ -1,0 +1,30 @@
+{
+  "info": {
+    "name": "AML AI Triage",
+    "_postman_id": "aml-ai-triage-collection",
+    "description": "Test AML Triage API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Triage Alert",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"customer_profile\": {\n    \"risk_category\": \"Medium\",\n    \"kyc_status\": \"Completed\",\n    \"account_age_months\": 14\n  },\n  \"alert\": {\n    \"alert_type\": \"High Velocity Transactions\",\n    \"triggered_rules\": [\"R-102\", \"R-311\"]\n  },\n  \"transactions\": [\n    {\"amount\": 98000, \"type\": \"credit\", \"channel\": \"UPI\"},\n    {\"amount\": 97000, \"type\": \"credit\", \"channel\": \"UPI\"},\n    {\"amount\": 99000, \"type\": \"credit\", \"channel\": \"UPI\"}\n  ]\n}"
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/triage",
+          "protocol": "http",
+          "host": ["localhost"],
+          "port": "3000",
+          "path": ["api", "triage"]
+        }
+      }
+    }
+  ]
+}
