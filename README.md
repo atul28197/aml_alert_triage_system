@@ -42,16 +42,97 @@ Governance-based final decision logic
 The goal: faster, consistent, explainable triage decisions.
 
 ## 🏗️ 2. Architecture Overview
-### 🔷 Layered Architecture
-API Layer
-    ↓
-Application Layer (Orchestration)
-    ↓
-Domain Layer (Risk + Decision Logic)
-    ↓
-Infrastructure Layer (LLM + Config)
-    ↓
-Shared (Logging / Utilities)
+
+### Logical Component Diagram
+
++------------------+
+|   Client / API   |
++------------------+
+          |
+          v
++------------------+
+|  Triage Service  |
++------------------+
+          |
+          v
++-----------------------+
+| Deterministic Engine  |
+| (Risk Signals)        |
++-----------------------+
+          |
+          v
++-----------------------+
+| LLM Validator         |
+| (Timeout + Retry)     |
++-----------------------+
+          |
+          v
++-----------------------+
+| Governance Engine     |
++-----------------------+
+          |
+          v
++-----------------------+
+| Audit Logger          |
++-----------------------+
+
+### Layered Architecture Diagram
+
++------------------------+
+|       API Layer        |
+| (Controller, Routes)   |
++------------------------+
+            |
+            v
++------------------------+
+|   Application Layer    |
+| (Triage Orchestration) |
++------------------------+
+            |
+            v
++------------------------+
+|      Domain Layer      |
+| Risk + Decision Logic  |
++------------------------+
+            |
+            v
++------------------------+
+| Infrastructure Layer   |
+| LLM, Config, Logging   |
++------------------------+
+
+### Sequence Flow Diagram
+
+Client
+  |
+  | POST /triage
+  v
+Controller
+  |
+  v
+Triage Service
+  |
+  |---> Risk Engine
+  |         |
+  |         v
+  |     Risk Score
+  |
+  |---> LLM Service
+  |         |
+  |         v
+  |     Validation / Adjustment
+  |
+  |---> Governance Engine
+  |         |
+  |         v
+  |     Final Decision
+  |
+  |---> Audit Log
+  |
+  v
+Response
+
+
 ### 📂 Project Structure
 src/
  ├── modules/
@@ -74,6 +155,10 @@ src/
  │   └── swagger.yaml
  ├── app.ts
  └── server.ts
+
+
+
+ 
 ## 🧠 3. Decision Flow
 Input Data
     ↓
